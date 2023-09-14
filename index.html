@@ -1,0 +1,128 @@
+<head>
+</head>
+<body>
+  
+  <!--使用ライブラリ-->
+  <script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+  <script src="https://unpkg.com/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+
+
+  <!--座標ファイル、ポリゴンインデックスファイルの読み込み-->
+  <script src="cubevts0.js"></script>
+  <script src="cubeindex0.js"></script>
+  <script src="cubevtsa1_c.js"></script>
+  <script src="cubeindexa1.js"></script>
+  <script src="cubevtsa2.js"></script>
+  <script src="cubeindexa2_c.js"></script>
+  <script src="cubevtsa3_c.js"></script>
+  <script src="vtsstring1.js"></script>
+  <script src="index1.js"></script>
+  <script src="planes1.js"></script>
+  <script src="planes2.js"></script>
+
+  <script src="spherevts.js"></script>
+  <script src="sphereindex.js"></script>
+
+  <!--座標ファイルに含まれる変数（パラメータ）を宣言-->
+  <script>
+    var r,l,para1;
+  </script>
+
+  <!--メインプログラム-->
+  <script src="script7.js"></script>
+
+  <!--キャンバスの追加-->
+  <p>球１</p>
+  <script>
+    let myscenes = new IScene();
+    myscenes.IaddAnimeObject('spherevts.txt', 'sphereindex.txt', {scale:0.6, material:'normal'});
+  </script>
+
+  <p>図４</p>
+  <script>
+    let myscene2 = new IScene();
+    myscene2.IaddAnimeObject('cubevtsa1_c.txt', 'cubeindexa1.txt');
+  </script>
+  
+  <!-- <p>球２</p>
+  <script>
+    let myscene0 = new IScene();
+    myscene0.IaddAnimeObject(spherevts, sphereindex);
+  </script>
+
+  <p>図１</p>
+  <script>
+    let myscene7 = new IScene();
+    myscene7.IaddSlider('l',{min:100, max:200});
+    myscene7.IaddSlider('r',{min:30, max:60});
+    myscene7.IaddObject(vtsstring1, index1, {scale:2});
+  </script>
+
+  <p>図２</p>
+  <script>
+    let myscene8 = new IScene();
+    myscene8.IaddSlider('l',{min:100, max:200});
+    myscene8.IaddSlider('r',{min:30, max:60});
+    myscene8.IaddSlider('para1',{min:10, max:200});
+    myscene8.IaddObject(vtsstring1, index1);
+    myscene8.IaddCuttingPlanes(planes2);
+  </script>
+
+  <p>図３</p>
+  <script>
+    let myscene1 = new IScene();
+    myscene1.IaddAnimeObject(cubevts0, cubeindex0);
+  </script>
+
+  <p>図５</p>
+  <script>
+    let myscene3 = new IScene();
+    myscene3.IaddAnimeObject(cubevtsa2, cubeindexa2_c);
+  </script>
+  
+  <p>図６</p>
+  <script>
+    let myscene4 = new IScene({projection:'ortho'});
+    myscene4.IaddAnimeObject(cubevtsa2, cubeindexa2_c);
+    myscene4.IaddAnimeObject(cubevtsa3_c, cubeindexa1);
+  </script> -->
+  
+
+</body>
+
+
+<!--
+説明
+
+
+キャンバスを追加する際は
+let (シーン名) = new IScene();
+(シーン名).IaddSlider('変数名', オプション); ※数式の頂点リストを使う場合
+(シーン名).IaddObject(頂点リスト, ポリゴンインデックスリスト); 
+の順番で記述する
+
+
+スライダーのオプション(デフォルト値)
+
+wdith スライダーの幅　(200)
+height スライダーの高さ（間隔、太くはならない）(40)
+min 最小値　(0)
+max 最大値　(100)
+step ステップ量　(1)
+init 初期値　((min+max)/2)
+
+
+IaddObject,IaddAnimeObjectのオプション(第３引数)
+
+scale：オブジェクトの拡大縮小（デフォルト値１）
+material：'custom' Mathematica風ライティング（デフォルト）
+　　　　　 'normal' three.jsのMeshNormalMaterial
+
+
+ISceneのオプション
+
+projection:'pers' 透視投影（デフォルト）
+　　　　　　'ortho'　平行投影
+-->
