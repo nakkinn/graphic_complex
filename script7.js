@@ -32,8 +32,10 @@ class IScene extends THREE.Scene{
         const canvasheight = 540;
 
         //キャンバス
+        this.block = document.createElement('div');
         this.canvas = document.createElement('canvas');
-        document.body.appendChild(this.canvas); //webページにキャンバスを追加
+        document.body.appendChild(this.block);
+        this.block.appendChild(this.canvas); //webページにキャンバスを追加
 
         //レンダラ
         this.renderer = new THREE.WebGLRenderer({
@@ -105,10 +107,6 @@ class IScene extends THREE.Scene{
                 this.object[i].mesh.rotateOnWorldAxis(this.rotateaxis, this.angularvelocity);
             }
         }
-        //cuttingplaneの回転
-        for(let i=0; i<this.cuttingplanes.length; i++){
-            //let tmp = new THREE.Vector3(cuttingplanes[i][0], cuttingplanes[i][1], cuttingplanes[i][2]);
-        }
         
         //クリッピング
         this.renderer.clippingPlanes = [];  //clippingPlanesを初期化
@@ -117,6 +115,9 @@ class IScene extends THREE.Scene{
         else    tmp = eval(this.cuttingplanes);
         //clippingPlanesを追加
         for(let i=0; i<tmp.length; i++){
+            let va = new THREE.Vector3(tmp[i][0], tmp[i][1], tmp[i][2]);
+            va = va.applyAxisAngle(this.rotateaxis, this.angularvelocity);
+            
             this.renderer.clippingPlanes.push(new THREE.Plane(new THREE.Vector3(tmp[i][0],tmp[i][1],tmp[i][2]),tmp[i][3]));
         }
 
@@ -133,7 +134,6 @@ class IScene extends THREE.Scene{
             let dx = event.movementX;
             let dy = event.movementY;
             this.angle = Math.min((dx*dx+dy*dy)*0.003, 0.1);
-            console.log(this);
         }
     }
 
@@ -146,9 +146,11 @@ class IScene extends THREE.Scene{
         let tmp = document.createElement('input');   //入力要素を生成
 
         tmp.type = 'range'; //入力要素の種類をスライダーに設定
-        document.body.appendChild(document.createElement('p')); //改行
-        document.body.appendChild(tmp);    //webページにスライダーを追加
-
+        let sliderlabel = document.createElement('p');
+        sliderlabel.textContent = parameter;
+        this.block.appendChild(sliderlabel);
+        this.block.appendChild(tmp);    //webページにスライダーを追加
+        
         //スライダーの設定
         tmp.style.width = option.width;
         tmp.style.height = option.height;
@@ -162,8 +164,6 @@ class IScene extends THREE.Scene{
 
         this.parasliders.push([parameter, tmp]);    //パラメータ名とスライダーを記録
 
-        document.write(parameter);  //スライダーの右にパラメータ名を記す
-
     }
 
     //IGraphicComplexクラスを呼び出し、オプションを渡す
@@ -174,7 +174,7 @@ class IScene extends THREE.Scene{
     }
 
     //IAnimeGraphicComplexクラスを呼び出し、オプションを渡す
-    IaddAnimeObject(vtsfilename, indexfilename, option, txtfile){
+    IaddAnimeObject(vtsfilename, indexfilename, option){
         const defaultvalues = {scale:1, material:'custom'};
         option = {...defaultvalues, ...option}; 
         this.object.push(new IAnimeGraphic(vtsfilename, indexfilename, this, option));
@@ -182,7 +182,11 @@ class IScene extends THREE.Scene{
 
     //シーンごとにcuttingplanesを記録
     IaddCuttingPlanes(planes){
-        this.cuttingplanes = planes;
+        let that = this;
+        $.get(planes,function(response){
+            that.cuttingplanes = response;
+        });
+        //this.cuttingplanes = planes;
     }
 
     
@@ -194,35 +198,72 @@ class IScene extends THREE.Scene{
 class IGraphicComplex{
         
     //初期設定
-    constructor(vtsstring, index, scene, option){
+    constructor(vtsfilename, indexfilename, scene, option){
 
-        this.vtsstring = vtsstring;
-        this.index = index;
+        this.vtsstring;
+        this.index;
         this.scene = scene;
         this.option = option;
         this.geometry = new THREE.BufferGeometry();
 
+        this.ready = false;
 
-        //ポリゴンの頂点番号を設定
-        this.geometry.setIndex(tripoly(this.index));
+        let that =  this;
 
-        //マテリアルの設定
-        if(this.option.material=='normal'){
-            this.material = new THREE.MeshNormalMaterial({side:THREE.DoubleSide});    //NormalMaterial（ライティングを無視する）
-        }else{
-            this.material = new THREE.MeshLambertMaterial({side:THREE.DoubleSide});   //ツヤのないマテリアル（ライトが必要）
+        //頂点テキストファイルの読み込み
+        function f1(){
+            return new Promise((resolve)=>{
+                $.get(vtsfilename, function(response){
+                    that.vtsstring = response;
+                    resolve();
+                });
+            });
         }
-        this.material.flatShading = true;   //フラットシェード
 
-        //メッシュ（ジオメトリ＋マテリアル）の生成
-        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        function f2(){
+            return new Promise((resolve)=>{
+                $.get(indexfilename, function(response){
+                    response = response.split('.,').join(',');
+                    response = response.split('.]').join(']');
+                    response = response.split(' ').join('');
+                    that.index = JSON.parse(response);
+                    resolve();
+                });
+            });
+        }
 
-        //this.mesh.scale.x = this.option.scale;
-        //this.mesh.scale.y = this.option.scale;
-        //this.mesh.scale.z = this.option.scale;
+        async function f3(){
+            return new Promise((resolve)=>{
+                //ポリゴンの頂点番号を設定
+                that.geometry.setIndex(tripoly(that.index));
 
-        //シーンにメッシュを追加
-        scene.add(this.mesh);  
+                //マテリアルの設定
+                if(that.option.material=='normal'){
+                    that.material = new THREE.MeshNormalMaterial({side:THREE.DoubleSide});    //NormalMaterial（ライティングを無視する）
+                }else{
+                    that.material = new THREE.MeshLambertMaterial({side:THREE.DoubleSide});   //ツヤのないマテリアル（ライトが必要）
+                }
+                that.material.flatShading = true;   //フラットシェード
+
+                //メッシュ（ジオメトリ＋マテリアル）の生成
+                that.mesh = new THREE.Mesh(that.geometry, that.material);
+
+                that.mesh.scale.x = that.option.scale;
+                that.mesh.scale.y = that.option.scale;
+                that.mesh.scale.z = that.option.scale;
+
+                //シーンにメッシュを追加
+                scene.add(that.mesh);  
+
+                that.ready = true;
+
+                resolve();
+            });
+        }
+
+        f1().then(()=>f2()).then(()=>f3());
+
+        
 
     }
 
@@ -255,6 +296,7 @@ class IAnimeGraphic{
 
         let that = this;
         
+        //頂点テキストファイルの読み込み
         function f1(){
             return new Promise((resolve)=>{
                 $.get(vtsfilename, function(response){
@@ -267,6 +309,7 @@ class IAnimeGraphic{
             });
         }
 
+        //インデックステキストファイルの読み込み
         function f2(){
             return new Promise((resolve)=>{
                 $.get(indexfilename, function(response){
@@ -286,8 +329,8 @@ class IAnimeGraphic{
                 if(that.vtsa.length!=1){
                     that.slider = document.createElement('input');  
                     that.slider.type = 'range';
-                    document.body.appendChild(document.createElement('p')); //改行
-                    document.body.appendChild(that.slider); //webページにスライダー追加
+                    scene.block.appendChild(document.createElement('p')); //改行
+                    scene.block.appendChild(that.slider); //webページにスライダー追加
 
                     //スライダー設定
                     that.slider.style.width = 200;
@@ -387,9 +430,7 @@ function randstr(){
 /*
 toDoリスト
 ・マウスを止めてからボタンを離したときは物体が回転しないようにする
-・データのみ（let などをかかない）のテキストファイルからデータを取り出す（セキュリティの問題上できなさそう）
 ・パラメータで動かしたときとコマ送りとを比較
 ・マウスホイールで拡大縮小（負の値で反転）、連続して回しているときはカーソルがキャンバス上にのってもスクロールになるようにする
 ・２値スライダー
-
 */
