@@ -37,6 +37,25 @@ class IScene extends THREE.Scene{
         document.body.appendChild(this.block);
         this.block.appendChild(this.canvas); //webページにキャンバスを追加
 
+        //マウスイベント
+        this.IInputReader = new IInputReader();
+
+        //このキャンバス上でマウスを動かしたときの処理
+
+        this.canvas.addEventListener('mousedown',()=>this.IInputReader.IsMouseDown = true, false);
+        this.canvas.addEventListener('mouseup',()=>this.IInputReader.IsMouseDown = false, false);
+        this.canvas.addEventListener('mousemove',(event)=>this.IInputReader.mousemove(event),false);
+
+        // var that = this;
+        // this.canvas.addEventListener('mousemove',function(event){
+        //     if(mouseIsPressed){
+        //         let dx = event.movementX;
+        //         let dy = event.movementY;
+        //         that.angularvelocity = Math.min((dx*dx+dy*dy)*0.3*that.clock.getDelta(), 0.05);
+        //         that.rotateaxis.set(dy, dx, 0).normalize();
+        //     }
+        // });  
+
         //レンダラ
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas
@@ -72,20 +91,8 @@ class IScene extends THREE.Scene{
         this.parasliders = [];   //スライダーの変数情報
         this.object = [];   //オブジェクトの情報
         this.cuttingplanes = [];    
-        this.rotateaxis = new THREE.Vector3(1,0,0); //回転軸
-        this.angularvelocity = 0;   //回転速度
+        this.angularvelocity = new THREE.Vector3();   //回転
         this.clock = new THREE.Clock();   //経過時間を図るタイマー
-
-        //このキャンバス上でマウスを動かしたときの処理
-        var that = this;
-        this.canvas.addEventListener('mousemove',function(event){
-            if(mouseIsPressed){
-                let dx = event.movementX;
-                let dy = event.movementY;
-                that.angularvelocity = Math.min((dx*dx+dy*dy)*0.3*that.clock.getDelta(), 0.05);
-                that.rotateaxis.set(dy, dx, 0).normalize();
-            }
-        });  
 
         this.Ianimation();  //描画処理を開始して繰り返す
     }
@@ -99,12 +106,25 @@ class IScene extends THREE.Scene{
             let str = this.parasliders[i][0] + '=' + this.parasliders[i][1].value + ';';
             eval(str);
         }
+
+        //マウスの変位から回転軸を設定
+        let tmpv = this.angularvelocity;
+        if(this.IInputReader.IsMouseDown){
+            tmpv = new THREE.Vector3(this.IInputReader.MouseMovementY, this.IInputReader.MouseMovementX, 0);
+        }
+        this.angularvelocity.lerp(tmpv, 0.2);   //1フレーム前の回転軸と平滑化
+
+        this.IInputReader.update();
+
+        let axis, rad;
+        axis = this.angularvelocity.clone().normalize();    //回転軸　　　ベクトルを正規化
+        rad = this.angularvelocity.length() * 0.018;        //回転の速さ　ベクトルの大きさ×定数
         
-        //オブジェクトの更新
+        //オブジェクトの更新・回転
         for(let i=0; i<this.object.length; i++){
             if(this.object[i].ready){
                 this.object[i].Iupdate();
-                this.object[i].mesh.rotateOnWorldAxis(this.rotateaxis, this.angularvelocity);
+                this.object[i].mesh.rotateOnWorldAxis(axis, rad);
             }
         }
         
@@ -399,6 +419,28 @@ class IAnimeGraphic{
 
         }
 
+    }
+}
+
+
+//マウスイベント
+class IInputReader{
+    constructor(){
+        this.IsMouseDown = false;
+        this.MouseMovementX = 0;
+        this.MouseMovementY = 0;
+    }
+
+    update(){
+        this.MouseMovementX = 0;
+        this.MouseMovementY = 0;
+    }
+
+    mousemove(event){
+        if(this.IsMouseDown){
+            this.MouseMovementX = event.movementX;
+            this.MouseMovementY = event.movementY;
+        }
     }
 }
 
