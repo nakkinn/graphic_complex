@@ -12,7 +12,7 @@
 
   <!--座標ファイルに含まれる変数（パラメータ）を宣言-->
   <script>
-    var r, l, para1;
+    var longitude, meridian, para1;
   </script>
 
   <!--メインプログラム-->
@@ -26,7 +26,7 @@
     myscene1.IaddAnimeObject('cubevts.txt','cubeindex.txt',{scale:2});
   </script>
 
-  <!-- <p>図２</p>
+  <p>図２</p>
   <script>
     let myscene2 = new IScene();
     myscene2.IaddAnimeObject('cubevts.txt','cubeindex.txt',{scale:1.5, material:'normal'});
@@ -41,10 +41,10 @@
   <p>図４</p>
   <script>
     let myscene4 = new IScene();
-    myscene4.IaddSlider('l',{min:100, max:200});
-    myscene4.IaddSlider('r',{min:30, max:60});
+    myscene4.IaddSlider('longitude',{min:100, max:200});
+    myscene4.IaddSlider('meridian',{min:30, max:60});
     myscene4.IaddObject('torusvts1.txt', 'torusindex1.txt');
-  </script>  -->
+  </script> 
 
   <!-- <p>図５</p>
   <script>
